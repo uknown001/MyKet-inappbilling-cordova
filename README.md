@@ -1,8 +1,12 @@
-Cafebazaar In app billing documentation for cordova 
+Cafebazaar In app billing for cordova 
 ===================================
+* If you have any questions, please contact me. +98 914 777 4887
+ 
+
 Requirements
 -------------
 Phonegap 3.0, Android 2.2.1+
+
 
 Installation
 -------------
