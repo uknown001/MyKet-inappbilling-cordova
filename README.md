@@ -1,32 +1,16 @@
-In app billing documentation
+پرداخت درون برنامه ای کافه بازار برای Cordova Phonegap 
 ===================================
-Requirements
+نیازمندی ها
 -------------
-Phonegap 3.0, Android 2.2.1+
+Phonegap یا Cordova 3.0, Android 2.2.1+
 
-* Purchasing and querying managed in-app items:  
-Google Play client version 3.9.16  
-* Purchasing and querying subscription items:  
-Google Play client version 3.10.10 or higher
 
-Support
----------------------
-For free community support, please use the issue tracker.  
-To get professional non-free support for the plugin, please contact me at gcharhon(at)smartmobilesoftware.com.
-
-If you find this plugin useful, please donate via BitCoin to support it:  
-17JK27E4vbzPrJbBAtvjUVN3LrFcATtRA1
-
-Installation
+نصب 
 -------------
 
-* Get acquainted with the Android [In-app Billing documentation](http://developer.android.com/google/play/billing/index.html).
+* این پلاگین قابل استفاده در بیلد فونگپ نمی باشد
 
-### Automatic
-
-We recommend this way to install the plugin into your project.
-
-1. Clone this project into your repository
+1. این پروژه رو clone کنید
 2. Run at the root of your project:  
 ```
     cordova plugin add /path/to/your/cloned/plugin/AndroidInAppBilling --variable BILLING_KEY="MIIBIjANBgk...AQAB"
