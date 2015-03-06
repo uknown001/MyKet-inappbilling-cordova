@@ -20,10 +20,6 @@ We recommend this way to install the plugin into your project.
 ```
     cordova plugin add /path/to/your/cloned/plugin/AndroidInAppBilling --variable BILLING_KEY="MIIBIjANBgk...AQAB"
 ```  
-or  
-```
-    cordova plugin add https://github.com/wikiweb/Cafebazzar-inappbilling-cordova.git --variable BILLING_KEY="MIIBIjANBgk...AQAB"
-```
 
 Using
 -------------
