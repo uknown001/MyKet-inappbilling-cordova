@@ -1,28 +1,17 @@
-In app billing documentation
+Cafebazaar In app billing for cordova 
 ===================================
+* If you have any questions, please contact me. +98 914 777 4887
+ 
+
 Requirements
 -------------
 Phonegap 3.0, Android 2.2.1+
 
-* Purchasing and querying managed in-app items:  
-Google Play client version 3.9.16  
-* Purchasing and querying subscription items:  
-Google Play client version 3.10.10 or higher
-
-Support
----------------------
-For free community support, please use the issue tracker.  
-To get professional non-free support for the plugin, please contact me at gcharhon(at)smartmobilesoftware.com.
-
-If you find this plugin useful, please donate via BitCoin to support it:  
-17JK27E4vbzPrJbBAtvjUVN3LrFcATtRA1
 
 Installation
 -------------
 
-* Get acquainted with the Android [In-app Billing documentation](http://developer.android.com/google/play/billing/index.html).
-
-### Automatic
+* Get Billing key from cafebazaar [In-app Billing documentation](http://pardakht.cafebazaar.ir/doc/?l=fa).
 
 We recommend this way to install the plugin into your project.
 
@@ -31,70 +20,9 @@ We recommend this way to install the plugin into your project.
 ```
     cordova plugin add /path/to/your/cloned/plugin/AndroidInAppBilling --variable BILLING_KEY="MIIBIjANBgk...AQAB"
 ```  
-or  
-```
-    phonegap local plugin add /path/to/your/cloned/plugin/AndroidInAppBilling --variable BILLING_KEY="MIIBIjANBgk...AQAB"
-```
 
-### Manually
-
-The manual steps are not working on Phonegap 3.1+. Theses steps are not maintained anymore. Check the [issue #32](_https://github.com/poiuytrez/AndroidInAppBilling/issues/32) for more info. 
-
-* Add in your `src` folder the `src/android/com` folder  
-It contains:
-    * [Google Play In-app Billing library]( http://developer.android.com/guide/google/play/billing/billing_overview.html)
-	* Phonegap InAppBillingPlugin
-* Create a `plugins` folder in your project's `www` folder if it does not exist.
-* Create a `com.smartmobilesoftware.inappbilling` folder inside the `plugins` folder.
-* Copy `www/inappbilling.js` into `<path to project>/www/plugins/com.smartmobilesoftware.inappbilling/www`
-* In res/xml/config.xml, add  
-
-```xml  
-<feature name="InAppBillingPlugin">   
-      <param name="android-package" value="com.smartmobilesoftware.inappbilling.InAppBillingPlugin"/>  
-</feature>  
-```
-* Open the AndroidManifest.xml of your application
-	* add this permission  
-`<uses-permission android:name="com.android.vending.BILLING" />`
-* Create a new file named `Phonegap_plugins.js` in the `<path to project>/www` folder if it does not exist.
-* Edit `Phonegap_plugins.js` and add a reference to the plugin to automatically load it:
-
-```javascript
-    Phonegap.define('Phonegap/plugin_list', function(require, exports, module) {
-    module.exports = [
-        {
-            "file": "plugins/com.smartmobilesoftware.inappbilling/www/inappbilling.js",
-            "id": "com.smartmobilesoftware.inappbilling.InAppBillingPlugin",
-            "clobbers": [
-                "inappbilling"
-	    ]
-    	}
-    ]
-    });
-```
-
-### Finish setting up your app
-* Create a release apk of your app and sign it.
-* Create a new application in the Developer Console.
-* Upload your apk
-* Enter the app description, logo, etc. then click on save
-* Add in-app purchases items from the Developer Console (activate them but do not publish the app)
-* Click on Services and APIs to get your public license key
-* For PhoneGap build, configure the plugin with a parameter in your `config.xml` file
-
-```xml
-<gap:plugin name="com.smartmobilesoftware.inappbilling">
-    <param name="BILLING_KEY" value="MIIBIjANBgk...AQAB" />
-</gap:plugin>
-```
-
-* Wait 6-8 hours
-* Install the signed app on your test device in release mode. The Google Account on the test device should not be the same as the developer account).
-* Read carefully the Google testing guide to learn how to test your app : http://developer.android.com/guide/google/play/billing/billing_testing.html
-* You can test purchase with no charge by adding google test account in your developer console -> 'Settings -> gmail accounts with testing access".
-Usage
--------
+Using
+-------------
 #### Initialization
 Initialize the billing plugin. The plugin must be inialized before calling any other methods. 
 
