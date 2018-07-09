@@ -1,8 +1,5 @@
-Cafebazaar In app billing for cordova 
+IranApps In app billing for cordova 
 ===================================
-* If you have any questions, please contact me. +98 914 777 4887
- 
-
 Requirements
 -------------
 Phonegap 3.0, Android 2.2.1+
@@ -11,7 +8,7 @@ Phonegap 3.0, Android 2.2.1+
 Installation
 -------------
 
-* Get Billing key from cafebazaar [In-app Billing documentation](http://pardakht.cafebazaar.ir/doc/?l=fa).
+* Get Billing key from iranapps
 
 We recommend this way to install the plugin into your project.
 
