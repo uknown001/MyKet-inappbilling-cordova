@@ -254,8 +254,8 @@ public class IabHelper {
             }
         };
 
-        Intent serviceIntent = new Intent("ir.tgbs.iranapps.billing.InAppBillingService.BIND");
-        serviceIntent.setPackage("ir.tgbs.android.iranapp");
+        Intent serviceIntent = new Intent("ir.mservices.market.InAppBillingService.BIND");
+        serviceIntent.setPackage("ir.mservices.market");
         List service = mContext.getPackageManager().queryIntentServices(serviceIntent, 0);
         if (service != null && !service.isEmpty()) {
             // service available to handle that Intent
