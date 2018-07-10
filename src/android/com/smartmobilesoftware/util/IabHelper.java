@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.example.android.trivialdrivesample.util;
+package com.smartmobilesoftware.util;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -66,6 +66,8 @@ import java.util.List;
  * attempting to start a second asynchronous operation while the first one
  * has not yet completed will result in an exception being thrown.
  *
+ * @author Bruno Oliveira (Google)
+ *
  */
 public class IabHelper {
     // Is debug logging enabled?
@@ -80,17 +82,6 @@ public class IabHelper {
 
     // Are subscriptions supported?
     boolean mSubscriptionsSupported = false;
-
-    // Is subscription update supported?
-    boolean mSubscriptionUpdateSupported = false;
-
-    // Is an asynchronous operation in progress?
-    // (only one at a time can be in progress)
-    boolean mAsyncInProgress = false;
-
-    // (for logging/debugging)
-    // if mAsyncInProgress == true, what asynchronous operation is in progress?
-    String mAsyncOperation = "";
 
     // Context we were passed during initialization
     Context mContext;
@@ -111,7 +102,6 @@ public class IabHelper {
     // Billing response codes
     public static final int BILLING_RESPONSE_RESULT_OK = 0;
     public static final int BILLING_RESPONSE_RESULT_USER_CANCELED = 1;
-    public static final int BILLING_RESPONSE_RESULT_SERVICE_UNAVAILABLE = 2;
     public static final int BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE = 3;
     public static final int BILLING_RESPONSE_RESULT_ITEM_UNAVAILABLE = 4;
     public static final int BILLING_RESPONSE_RESULT_DEVELOPER_ERROR = 5;
@@ -131,7 +121,6 @@ public class IabHelper {
     public static final int IABHELPER_UNKNOWN_ERROR = -1008;
     public static final int IABHELPER_SUBSCRIPTIONS_NOT_AVAILABLE = -1009;
     public static final int IABHELPER_INVALID_CONSUMPTION = -1010;
-    public static final int IABHELPER_SUBSCRIPTION_UPDATE_NOT_AVAILABLE = -1011;
 
     // Keys for the responses from InAppBillingService
     public static final String RESPONSE_CODE = "RESPONSE_CODE";
@@ -193,7 +182,7 @@ public class IabHelper {
          *
          * @param result The result of the setup process.
          */
-        void onIabSetupFinished(IabResult result);
+        public void onIabSetupFinished(IabResult result);
     }
 
     /**
@@ -232,38 +221,20 @@ public class IabHelper {
                         if (listener != null) listener.onIabSetupFinished(new IabResult(response,
                                 "Error checking for billing v3 support."));
 
-                        // if in-app purchases aren't supported, neither are subscriptions
+                        // if in-app purchases aren't supported, neither are subscriptions.
                         mSubscriptionsSupported = false;
-                        mSubscriptionUpdateSupported = false;
                         return;
-                    } else {
-                        logDebug("In-app billing version 3 supported for " + packageName);
                     }
+                    logDebug("In-app billing version 3 supported for " + packageName);
 
-                    // Check for v5 subscriptions support. This is needed for
-                    // getBuyIntentToReplaceSku which allows for subscription update
-                    response = mService.isBillingSupported(5, packageName, ITEM_TYPE_SUBS);
+                    // check for v3 subscriptions support
+                    response = mService.isBillingSupported(3, packageName, ITEM_TYPE_SUBS);
                     if (response == BILLING_RESPONSE_RESULT_OK) {
-                        logDebug("Subscription re-signup AVAILABLE.");
-                        mSubscriptionUpdateSupported = true;
-                    } else {
-                        logDebug("Subscription re-signup not available.");
-                        mSubscriptionUpdateSupported = false;
-                    }
-
-                    if (mSubscriptionUpdateSupported) {
+                        logDebug("Subscriptions AVAILABLE.");
                         mSubscriptionsSupported = true;
-                    } else {
-                        // check for v3 subscriptions support
-                        response = mService.isBillingSupported(3, packageName, ITEM_TYPE_SUBS);
-                        if (response == BILLING_RESPONSE_RESULT_OK) {
-                            logDebug("Subscriptions AVAILABLE.");
-                            mSubscriptionsSupported = true;
-                        } else {
-                            logDebug("Subscriptions NOT AVAILABLE. Response: " + response);
-                            mSubscriptionsSupported = false;
-                            mSubscriptionUpdateSupported = false;
-                        }
+                    }
+                    else {
+                        logDebug("Subscriptions NOT AVAILABLE. Response: " + response);
                     }
 
                     mSetupDone = true;
@@ -271,7 +242,7 @@ public class IabHelper {
                 catch (RemoteException e) {
                     if (listener != null) {
                         listener.onIabSetupFinished(new IabResult(IABHELPER_REMOTE_EXCEPTION,
-                                "RemoteException while setting up in-app billing."));
+                                                    "RemoteException while setting up in-app billing."));
                     }
                     e.printStackTrace();
                     return;
@@ -285,7 +256,8 @@ public class IabHelper {
 
         Intent serviceIntent = new Intent("ir.tgbs.iranapps.billing.InAppBillingService.BIND");
         serviceIntent.setPackage("ir.tgbs.android.iranapp");
-        if (!mContext.getPackageManager().queryIntentServices(serviceIntent, 0).isEmpty()) {
+        List service = mContext.getPackageManager().queryIntentServices(serviceIntent, 0);
+        if (service != null && !service.isEmpty()) {
             // service available to handle that Intent
             mContext.bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
         }
@@ -294,7 +266,7 @@ public class IabHelper {
             if (listener != null) {
                 listener.onIabSetupFinished(
                         new IabResult(BILLING_RESPONSE_RESULT_BILLING_UNAVAILABLE,
-                                "Billing service unavailable on device."));
+                        "Billing service unavailable on device."));
             }
         }
     }
@@ -343,7 +315,7 @@ public class IabHelper {
          * @param result The result of the purchase.
          * @param info The purchase information (null if purchase failed)
          */
-        void onIabPurchaseFinished(IabResult result, Purchase info);
+        public void onIabPurchaseFinished(IabResult result, Purchase info);
     }
 
     // The listener registered on launchPurchaseFlow, which we have to call back when
@@ -356,7 +328,7 @@ public class IabHelper {
 
     public void launchPurchaseFlow(Activity act, String sku, int requestCode,
             OnIabPurchaseFinishedListener listener, String extraData) {
-        launchPurchaseFlow(act, sku, ITEM_TYPE_INAPP, null, requestCode, listener, extraData);
+        launchPurchaseFlow(act, sku, ITEM_TYPE_INAPP, requestCode, listener, extraData);
     }
 
     public void launchSubscriptionPurchaseFlow(Activity act, String sku, int requestCode,
@@ -366,67 +338,46 @@ public class IabHelper {
 
     public void launchSubscriptionPurchaseFlow(Activity act, String sku, int requestCode,
             OnIabPurchaseFinishedListener listener, String extraData) {
-        launchPurchaseFlow(act, sku, ITEM_TYPE_SUBS, null, requestCode, listener, extraData);
+        launchPurchaseFlow(act, sku, ITEM_TYPE_SUBS, requestCode, listener, extraData);
     }
 
     /**
      * Initiate the UI flow for an in-app purchase. Call this method to initiate an in-app purchase,
-     * which will involve bringing up the Google Play screen. The calling activity will be paused
-     * while the user interacts with Google Play, and the result will be delivered via the
-     * activity's {@link android.app.Activity#onActivityResult} method, at which point you must call
+     * which will involve bringing up the Google Play screen. The calling activity will be paused while
+     * the user interacts with Google Play, and the result will be delivered via the activity's
+     * {@link android.app.Activity#onActivityResult} method, at which point you must call
      * this object's {@link #handleActivityResult} method to continue the purchase flow. This method
      * MUST be called from the UI thread of the Activity.
      *
      * @param act The calling activity.
      * @param sku The sku of the item to purchase.
-     * @param itemType indicates if it's a product or a subscription (ITEM_TYPE_INAPP or
-     *      ITEM_TYPE_SUBS)
-     * @param oldSkus A list of SKUs which the new SKU is replacing or null if there are none
-     * @param requestCode A request code (to differentiate from other responses -- as in
-     *      {@link android.app.Activity#startActivityForResult}).
+     * @param itemType indicates if it's a product or a subscription (ITEM_TYPE_INAPP or ITEM_TYPE_SUBS)
+     * @param requestCode A request code (to differentiate from other responses --
+     *     as in {@link android.app.Activity#startActivityForResult}).
      * @param listener The listener to notify when the purchase process finishes
-     * @param extraData Extra data (developer payload), which will be returned with the purchase
-     *      data when the purchase completes. This extra data will be permanently bound to that
-     *      purchase and will always be returned when the purchase is queried.
+     * @param extraData Extra data (developer payload), which will be returned with the purchase data
+     *     when the purchase completes. This extra data will be permanently bound to that purchase
+     *     and will always be returned when the purchase is queried.
      */
-    public void launchPurchaseFlow(Activity act, String sku, String itemType, List<String> oldSkus,
-            int requestCode, OnIabPurchaseFinishedListener listener, String extraData) {
+    public void launchPurchaseFlow(Activity act, String sku, String itemType, int requestCode,
+                        OnIabPurchaseFinishedListener listener, String extraData) {
         checkNotDisposed();
         checkSetupDone("launchPurchaseFlow");
-        flagStartAsync("launchPurchaseFlow");
         IabResult result;
 
         if (itemType.equals(ITEM_TYPE_SUBS) && !mSubscriptionsSupported) {
             IabResult r = new IabResult(IABHELPER_SUBSCRIPTIONS_NOT_AVAILABLE,
                     "Subscriptions are not available.");
-            flagEndAsync();
             if (listener != null) listener.onIabPurchaseFinished(r, null);
             return;
         }
 
         try {
             logDebug("Constructing buy intent for " + sku + ", item type: " + itemType);
-            Bundle buyIntentBundle;
-            if (oldSkus == null || oldSkus.isEmpty()) {
-                // Purchasing a new item or subscription re-signup
-                buyIntentBundle = mService.getBuyIntent(3, mContext.getPackageName(), sku, itemType,
-                        extraData);
-            } else {
-                // Subscription upgrade/downgrade
-                if (!mSubscriptionUpdateSupported) {
-                    IabResult r = new IabResult(IABHELPER_SUBSCRIPTION_UPDATE_NOT_AVAILABLE,
-                            "Subscription updates are not available.");
-                    flagEndAsync();
-                    if (listener != null) listener.onIabPurchaseFinished(r, null);
-                    return;
-                }
-                buyIntentBundle = mService.getBuyIntentToReplaceSkus(5, mContext.getPackageName(),
-                        oldSkus, sku, itemType, extraData);
-            }
+            Bundle buyIntentBundle = mService.getBuyIntent(3, mContext.getPackageName(), sku, itemType, extraData);
             int response = getResponseCodeFromBundle(buyIntentBundle);
             if (response != BILLING_RESPONSE_RESULT_OK) {
                 logError("Unable to buy item, Error response: " + getResponseDesc(response));
-                flagEndAsync();
                 result = new IabResult(response, "Unable to buy item");
                 if (listener != null) listener.onIabPurchaseFinished(result, null);
                 return;
@@ -438,14 +389,13 @@ public class IabHelper {
             mPurchaseListener = listener;
             mPurchasingItemType = itemType;
             act.startIntentSenderForResult(pendingIntent.getIntentSender(),
-                    requestCode, new Intent(),
-                    Integer.valueOf(0), Integer.valueOf(0),
-                    Integer.valueOf(0));
+                                           requestCode, new Intent(),
+                                           Integer.valueOf(0), Integer.valueOf(0),
+                                           Integer.valueOf(0));
         }
         catch (SendIntentException e) {
             logError("SendIntentException while launching purchase flow for sku " + sku);
             e.printStackTrace();
-            flagEndAsync();
 
             result = new IabResult(IABHELPER_SEND_INTENT_FAILED, "Failed to send intent.");
             if (listener != null) listener.onIabPurchaseFinished(result, null);
@@ -453,7 +403,6 @@ public class IabHelper {
         catch (RemoteException e) {
             logError("RemoteException while launching purchase flow for sku " + sku);
             e.printStackTrace();
-            flagEndAsync();
 
             result = new IabResult(IABHELPER_REMOTE_EXCEPTION, "Remote exception while starting purchase flow");
             if (listener != null) listener.onIabPurchaseFinished(result, null);
@@ -479,9 +428,6 @@ public class IabHelper {
 
         checkNotDisposed();
         checkSetupDone("handleActivityResult");
-
-        // end of async purchase operation that started on launchPurchaseFlow
-        flagEndAsync();
 
         if (data == null) {
             logError("Null data in IAB activity result.");
@@ -564,7 +510,7 @@ public class IabHelper {
     /**
      * Queries the inventory. This will query all owned items from the server, as well as
      * information on additional skus, if specified. This method may block or take long to execute.
-     * Do not call from a UI thread. For that, use the non-blocking version {@link #queryInventoryAsync}.
+     * Do not call from a UI thread. For that, use the non-blocking version {@link #refreshInventoryAsync}.
      *
      * @param querySkuDetails if true, SKU details (price, description, etc) will be queried as well
      *     as purchase information.
@@ -575,7 +521,7 @@ public class IabHelper {
      * @throws IabException if a problem occurs while refreshing the inventory.
      */
     public Inventory queryInventory(boolean querySkuDetails, List<String> moreItemSkus,
-            List<String> moreSubsSkus) throws IabException {
+                                        List<String> moreSubsSkus) throws IabException {
         checkNotDisposed();
         checkSetupDone("queryInventory");
         try {
@@ -627,7 +573,7 @@ public class IabHelper {
          * @param result The result of the operation.
          * @param inv The inventory.
          */
-        void onQueryInventoryFinished(IabResult result, Inventory inv);
+        public void onQueryInventoryFinished(IabResult result, Inventory inv);
     }
 
 
@@ -641,12 +587,13 @@ public class IabHelper {
      * @param moreSkus as in {@link #queryInventory}
      * @param listener The listener to notify when the refresh operation completes.
      */
-    public void queryInventoryAsync(final boolean querySkuDetails, final List<String> moreSkus,
-            final QueryInventoryFinishedListener listener) {
+    public void queryInventoryAsync(final boolean querySkuDetails,
+                               final List<String> moreSkus,
+                               final QueryInventoryFinishedListener listener) {
         final Handler handler = new Handler();
         checkNotDisposed();
         checkSetupDone("queryInventory");
-        flagStartAsync("refresh inventory");
+
         (new Thread(new Runnable() {
             public void run() {
                 IabResult result = new IabResult(BILLING_RESPONSE_RESULT_OK, "Inventory refresh successful.");
@@ -657,8 +604,6 @@ public class IabHelper {
                 catch (IabException ex) {
                     result = ex.getResult();
                 }
-
-                flagEndAsync();
 
                 final IabResult result_f = result;
                 final Inventory inv_f = inv;
@@ -704,19 +649,19 @@ public class IabHelper {
             String token = itemInfo.getToken();
             String sku = itemInfo.getSku();
             if (token == null || token.equals("")) {
-                logError("Can't consume "+ sku + ". No token.");
-                throw new IabException(IABHELPER_MISSING_TOKEN, "PurchaseInfo is missing token for sku: "
-                        + sku + " " + itemInfo);
+               logError("Can't consume "+ sku + ". No token.");
+               throw new IabException(IABHELPER_MISSING_TOKEN, "PurchaseInfo is missing token for sku: "
+                   + sku + " " + itemInfo);
             }
 
             logDebug("Consuming sku: " + sku + ", token: " + token);
             int response = mService.consumePurchase(3, mContext.getPackageName(), token);
             if (response == BILLING_RESPONSE_RESULT_OK) {
-                logDebug("Successfully consumed sku: " + sku);
+               logDebug("Successfully consumed sku: " + sku);
             }
             else {
-                logDebug("Error consuming consuming sku " + sku + ". " + getResponseDesc(response));
-                throw new IabException(response, "Error consuming sku " + sku);
+               logDebug("Error consuming consuming sku " + sku + ". " + getResponseDesc(response));
+               throw new IabException(response, "Error consuming sku " + sku);
             }
         }
         catch (RemoteException e) {
@@ -734,7 +679,7 @@ public class IabHelper {
          * @param purchase The purchase that was (or was to be) consumed.
          * @param result The result of the consumption operation.
          */
-        void onConsumeFinished(Purchase purchase, IabResult result);
+        public void onConsumeFinished(Purchase purchase, IabResult result);
     }
 
     /**
@@ -748,7 +693,7 @@ public class IabHelper {
          * @param results The results of each consumption operation, corresponding to each
          *     sku.
          */
-        void onConsumeMultiFinished(List<Purchase> purchases, List<IabResult> results);
+        public void onConsumeMultiFinished(List<Purchase> purchases, List<IabResult> results);
     }
 
     /**
@@ -768,7 +713,7 @@ public class IabHelper {
     }
 
     /**
-     * Same as {@link #consumeAsync}, but for multiple items at once.
+     * Same as {@link consumeAsync}, but for multiple items at once.
      * @param purchases The list of PurchaseInfo objects representing the purchases to consume.
      * @param listener The listener to notify when the consumption operation finishes.
      */
@@ -853,21 +798,6 @@ public class IabHelper {
         }
     }
 
-    void flagStartAsync(String operation) {
-        if (mAsyncInProgress) throw new IllegalStateException("Can't start async operation (" +
-                operation + ") because another async operation(" + mAsyncOperation + ") is in progress.");
-        mAsyncOperation = operation;
-        mAsyncInProgress = true;
-        logDebug("Starting async operation: " + operation);
-    }
-
-    void flagEndAsync() {
-        logDebug("Ending async operation: " + mAsyncOperation);
-        mAsyncOperation = "";
-        mAsyncInProgress = false;
-    }
-
-
     int queryPurchases(Inventory inv, String itemType) throws JSONException, RemoteException {
         // Query purchases
         logDebug("Querying owned items, item type: " + itemType);
@@ -894,11 +824,11 @@ public class IabHelper {
             }
 
             ArrayList<String> ownedSkus = ownedItems.getStringArrayList(
-                    RESPONSE_INAPP_ITEM_LIST);
+                        RESPONSE_INAPP_ITEM_LIST);
             ArrayList<String> purchaseDataList = ownedItems.getStringArrayList(
-                    RESPONSE_INAPP_PURCHASE_DATA_LIST);
+                        RESPONSE_INAPP_PURCHASE_DATA_LIST);
             ArrayList<String> signatureList = ownedItems.getStringArrayList(
-                    RESPONSE_INAPP_SIGNATURE_LIST);
+                        RESPONSE_INAPP_SIGNATURE_LIST);
 
             for (int i = 0; i < purchaseDataList.size(); ++i) {
                 String purchaseData = purchaseDataList.get(i);
@@ -932,12 +862,14 @@ public class IabHelper {
     }
 
     int querySkuDetails(String itemType, Inventory inv, List<String> moreSkus)
-            throws RemoteException, JSONException {
+                                throws RemoteException, JSONException {
         logDebug("Querying SKU details.");
         ArrayList<String> skuList = new ArrayList<String>();
         skuList.addAll(inv.getAllOwnedSkus(itemType));
         if (moreSkus != null) {
+			logDebug("moreSkus: Building SKUs List");
             for (String sku : moreSkus) {
+				logDebug("moreSkus: "+sku);
                 if (!skuList.contains(sku)) {
                     skuList.add(sku);
                 }
@@ -949,61 +881,40 @@ public class IabHelper {
             return BILLING_RESPONSE_RESULT_OK;
         }
 
-        // Split the sku list in blocks of no more than 20 elements.
-        ArrayList<ArrayList<String>> packs = new ArrayList<ArrayList<String>>();
-        ArrayList<String> tempList;
-        int n = skuList.size() / 20;
-        int mod = skuList.size() % 20;
-        for (int i = 0; i < n; i++) {
-            tempList = new ArrayList<String>();
-            for (String s : skuList.subList(i * 20, i * 20 + 20)) {
-                tempList.add(s);
+        Bundle querySkus = new Bundle();
+        querySkus.putStringArrayList(GET_SKU_DETAILS_ITEM_LIST, skuList);
+        Bundle skuDetails = mService.getSkuDetails(3, mContext.getPackageName(),
+                itemType, querySkus);
+
+        if (!skuDetails.containsKey(RESPONSE_GET_SKU_DETAILS_LIST)) {
+            int response = getResponseCodeFromBundle(skuDetails);
+            if (response != BILLING_RESPONSE_RESULT_OK) {
+                logDebug("getSkuDetails() failed: " + getResponseDesc(response));
+                return response;
             }
-            packs.add(tempList);
-        }
-        if (mod != 0) {
-            tempList = new ArrayList<String>();
-            for (String s : skuList.subList(n * 20, n * 20 + mod)) {
-                tempList.add(s);
-            }
-            packs.add(tempList);
-        }
-
-        for (ArrayList<String> skuPartList : packs) {
-            Bundle querySkus = new Bundle();
-            querySkus.putStringArrayList(GET_SKU_DETAILS_ITEM_LIST, skuPartList);
-            Bundle skuDetails = mService.getSkuDetails(3, mContext.getPackageName(),
-                    itemType, querySkus);
-
-            if (!skuDetails.containsKey(RESPONSE_GET_SKU_DETAILS_LIST)) {
-                int response = getResponseCodeFromBundle(skuDetails);
-                if (response != BILLING_RESPONSE_RESULT_OK) {
-                    logDebug("getSkuDetails() failed: " + getResponseDesc(response));
-                    return response;
-                } else {
-                    logError("getSkuDetails() returned a bundle with neither an error nor a detail list.");
-                    return IABHELPER_BAD_RESPONSE;
-                }
-            }
-
-            ArrayList<String> responseList = skuDetails.getStringArrayList(
-                    RESPONSE_GET_SKU_DETAILS_LIST);
-
-            for (String thisResponse : responseList) {
-                SkuDetails d = new SkuDetails(itemType, thisResponse);
-                logDebug("Got sku details: " + d);
-                inv.addSkuDetails(d);
+            else {
+                logError("getSkuDetails() returned a bundle with neither an error nor a detail list.");
+                return IABHELPER_BAD_RESPONSE;
             }
         }
 
+        ArrayList<String> responseList = skuDetails.getStringArrayList(
+                RESPONSE_GET_SKU_DETAILS_LIST);
+
+        for (String thisResponse : responseList) {
+            SkuDetails d = new SkuDetails(itemType, thisResponse);
+            logDebug("Got sku details: " + d);
+            inv.addSkuDetails(d);
+        }
         return BILLING_RESPONSE_RESULT_OK;
     }
+
 
     void consumeAsyncInternal(final List<Purchase> purchases,
                               final OnConsumeFinishedListener singleListener,
                               final OnConsumeMultiFinishedListener multiListener) {
         final Handler handler = new Handler();
-        flagStartAsync("consume");
+
         (new Thread(new Runnable() {
             public void run() {
                 final List<IabResult> results = new ArrayList<IabResult>();
@@ -1017,7 +928,6 @@ public class IabHelper {
                     }
                 }
 
-                flagEndAsync();
                 if (!mDisposed && singleListener != null) {
                     handler.post(new Runnable() {
                         public void run() {
