@@ -1,4 +1,4 @@
-IranApps In app billing for cordova 
+MyKet In app billing for cordova 
 ===================================
 Requirements
 -------------
@@ -8,7 +8,7 @@ Phonegap 3.0, Android 2.2.1+
 Installation
 -------------
 
-* Get Billing key from iranapps
+* Get Billing key from myket
 
 We recommend this way to install the plugin into your project.
 
